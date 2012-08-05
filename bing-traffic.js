@@ -1,12 +1,18 @@
-var bingTraffic = new function(options){
+shr = shr || {};
+shr.maps = shr.maps || {};
+
+
+shr.maps.bingTraffic = new function(options){
+
 	this._options = {
+		// Key used to sign requests to the bing mapping Api
 		'bingApiKey':''
 	}
 
 	this._init(options)
 }
 
-bingTraffic.prototype{
+shr.maps.bingTraffic.prototype{
 
 	_init : function(options){
 		this._applyOptions(options);
