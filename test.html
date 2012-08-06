@@ -5,19 +5,113 @@
 <head>
 	<title>Bing Traffic api test</title>
 
+	<style type="text/css">
+		input[type="text"] {
+			width: 250px;
+		}
+	</style>
+	<script type="text/javascript" src="lib/date.js"></script>
 	<script type="text/javascript" src="lib/jquery-1.7.2.min.js"></script>
-	<script type="text/javascript" src="bingTraffic.js"></script>
+	<script type="text/javascript" src="bing-traffic.js"></script>
+	
 
 	<script type="text/javascript">
+		var trafficInterval = null;
+
 		$(function(){
-			$("#main-div").text("Page Loaded")
+
+			var traffic = new shr.maps.bingTraffic({
+				'bingApiKey':''
+			});
+
+			$("#start-calculating").click(function(){
+
+				$("#time-and-distance > tbody").html("");
+
+				var start = $("#start-location").val();
+				var finish = $("#end-location").val();
+				if(start !== "" && finish !== ""){
+
+					$("#start-calculating").hide();
+					$("#stop-calculating").show();
+					if(trafficInterval != null) {
+						clearInterval(trafficInterval);
+						trafficInterval = null;
+					}
+
+					traffic.calculate_driveTime(start, finish, onSuccess, onFailure);
+					trafficInterval = setInterval(function(){
+						traffic.calculate_driveTime(start, finish, onSuccess, onFailure);		
+					}, 60000);
+				}
+			});
+
+			$("#stop-calculating").click(function(){
+				$("#start-calculating").show();
+				$("#stop-calculating").hide();
+
+				clearInterval(trafficInterval);
+				trafficInterval = null;
+			});
+			
 		});
+
+
+
+		function onSuccess(data) {
+			
+			$.each(data, function(index, item){
+				var minutesTravel = item.time / 60;
+				var hoursTravel = minutesTravel / 60;
+
+				var timeFormat = "h:mm tt";
+
+				var str = "<tr>";
+				str += "<td>" + item.departure.toString(timeFormat) + "</td>";
+				str += "<td>" + item.arrival.toString(timeFormat) + "</td>";
+				str += ("<td>" + minutesTravel.toFixed(2) + "</td>");
+				str += ("<td>" + item.distance.toFixed(2) + "</td>");
+				str += ("<td>" + (item.distance / hoursTravel).toFixed(2) + "</td>");
+				str += "</tr>"
+
+				$("#time-and-distance > tbody").append(str);
+			});
+		}
+
+		function onFailure(){
+			
+		}
+
 	</script>
 </head>
 
 <body>
-	<div id="main-div">
+	
+	<div>
+		<label for="start-location">Start Location</label>
+		<input type="text" id="start-location" />
+
+		<label for="end-location">End Location</label>
+		<input type="text" id="end-location"/>
+
+		<input type="button" value="Start Calculating" id="start-calculating" />
+		<input type="button" value="Stop Calculating" id="stop-calculating" style="display:none;" />
+		
 	</div>
+
+	<table id="time-and-distance">
+		<thead>
+			<tr>
+				<td>Departure</td>
+				<td>Arrival</td>
+				<td>Time (min.)</td>
+				<td>Distance (mi.)</td>
+				<td>MPH</td>
+			<tr>
+		<thead>
+		<tbody>
+		</tbody>
+	</table>
 </body>
 
 </html>
